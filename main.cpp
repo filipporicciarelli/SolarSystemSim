@@ -1,12 +1,28 @@
 #include <SFML/Graphics.hpp>
 #include "Planet.h"
 #include <optional>
+#include <vector>
+#include <cstdint> //per usare uint8_t
+
+struct Star {
+    sf::Vector2f pos;
+    uint8_t brightness;
+};
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({ 1600, 900 }), "Solar System Sim");
+    // Ottengo la risoluzione del monitor attuale
+    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+
+    //creo la finestra in Fullscreen
+    sf::RenderWindow window(desktop, "Solar System Sim", sf::State::Fullscreen);
+
     window.setFramerateLimit(144);
+
     sf::Clock clock;
-    sf::Vector2f screenCenter(800.f, 450.f);
+    sf::Vector2f screenCenter(
+        static_cast<float>(desktop.size.x) / 2.f,
+        static_cast<float>(desktop.size.y) / 2.f
+        );
 
     //sole
     Planet sun(40.f, 0.f, 0.f, sf::Color::Yellow, nullptr, false);
@@ -26,12 +42,32 @@ int main() {
     //lune
     Planet moon(5.f, 60.f, 2.5f, sf::Color(150, 150, 150), &earth, false);
 
+    std::vector<Star> stars;
+
+    for (int i = 0; i < 1000; ++i) {
+        stars.push_back({
+            sf::Vector2f(
+                static_cast<float>(rand() % desktop.size.x),
+                static_cast<float>(rand() % desktop.size.y)
+            ),
+            static_cast<uint8_t>(rand() % 200 + 55)
+        });
+    }
+
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
+
+            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+                if (keyPressed->code == sf::Keyboard::Key::Escape) {
+                    window.close();
+                }
+            }
         }
+
+        
 
         float dt = clock.restart().asSeconds();
 
@@ -47,6 +83,11 @@ int main() {
         moon.update(dt);
 
         window.clear(sf::Color(5, 5, 15));
+
+        for (const auto& star : stars) {
+            sf::Vertex point(star.pos, sf::Color(255, 255, 255, star.brightness));
+            window.draw(&point, 1, sf::PrimitiveType::Points);
+        }
         sun.draw(window);
         mercury.draw(window);
         venus.draw(window);
