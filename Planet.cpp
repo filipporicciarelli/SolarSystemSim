@@ -29,10 +29,10 @@ void Planet::update(float deltaTime, sf::Vector2f centerOffset) {
 
     // scia
     if (showTrail) {
-        trail.append(sf::Vertex(newPos, shape.getFillColor()));
+        trail.append(sf::Vertex(shape.getPosition(), shape.getFillColor()));
 
-        // Se la coda è troppo lunga (es. 150 punti), tolgo il primo (il più vecchio)
-        if (trail.getVertexCount() > 150) {
+        // Se la coda è troppo lunga (es. 300 punti), tolgo il primo (il più vecchio)
+        if (trail.getVertexCount() > 300) {
             // Spostiamo tutti i punti indietro di uno per "mangiare la coda"
             for (size_t i = 0; i < trail.getVertexCount() - 1; i++) {
                 trail[i] = trail[i + 1];
@@ -46,6 +46,20 @@ void Planet::update(float deltaTime, sf::Vector2f centerOffset) {
 
             // Ridimensioniamo l'array per rimuovere l'ultimo duplicato
             trail.resize(trail.getVertexCount() - 1);
+        }
+
+        // Ricalcolo la sfumatura per TUTTI i punti attualmente nella coda
+        // Questo risolve il bug: la scia sfuma anche se ci sono solo 2 o 10 punti
+        size_t count = trail.getVertexCount();
+
+        for (size_t i = 0; i < count; ++i) {
+            float progress = static_cast<float>(i) / static_cast<float>(count);
+            sf::Color color = shape.getFillColor();
+
+            // Alpha sfumato: il punto i=0 è il più vecchio (trasparente)
+            // il punto i=count-1 è l'ultimo aggiunto (opaco)
+            color.a = static_cast<unsigned char>(255.f * progress);
+            trail[i].color = color;
         }
     }
     
