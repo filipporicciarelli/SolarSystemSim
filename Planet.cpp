@@ -1,8 +1,8 @@
 #include "Planet.h"
 #include <cmath>
 
-Planet::Planet(float radius, float distance, float speed, sf::Color color, Planet* parent, bool hasTrail)
-    : orbitDistance(distance), rotationSpeed(speed), currentAngle(0.f), parentPlanet(parent), showTrail(hasTrail)
+Planet::Planet(std::string n, float radius, float distance, float speed, sf::Color color, Planet* parent, bool hasTrail)
+    : name (n), orbitDistance(distance), rotationSpeed(speed), currentAngle(0.f), parentPlanet(parent), showTrail(hasTrail)
 {
     shape.setRadius(radius);
     shape.setOrigin({ radius, radius });
@@ -60,6 +60,9 @@ void Planet::update(float deltaTime, sf::Vector2f centerOffset) {
 }
 
 void Planet::draw(sf::RenderWindow& window) {
+    //controlla se il pianeta è visibile o no
+    if (!isVisible) return;
+
     // Disegna la scia (se esiste)
     if (showTrail && trail.getVertexCount() > 0) {
         window.draw(trail);
@@ -70,7 +73,7 @@ void Planet::draw(sf::RenderWindow& window) {
 
     // Effetto speciale: Anelli di Saturno
     // Uso una condizione specifica per "identificare" Saturno basandoci sulle sue proprietà
-    if (orbitDistance > 550.f && shape.getRadius() > 20.f && shape.getRadius() < 35.f) {
+    if (name=="Saturno") {
         sf::CircleShape ring(shape.getRadius() * 1.8f);
         ring.setOrigin({ ring.getRadius(), ring.getRadius() });
         ring.setPosition(shape.getPosition());
@@ -88,8 +91,4 @@ sf::Vector2f Planet::getPosition() const {
 
 float Planet::getRadius() const {
     return shape.getRadius();
-}
-
-sf::Color Planet::getColor() const {
-    return shape.getFillColor();
 }
