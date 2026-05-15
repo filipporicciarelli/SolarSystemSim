@@ -1,24 +1,30 @@
-# Solar System Simulation (SFML)
+# Solar System Simulator (SFML)
 
-Un simulatore orbitale interattivo del Sistema Solare sviluppato in **C++** utilizzando la libreria **SFML**. Il progetto si focalizza sulla rappresentazione dinamica dei moti planetari e sull'implementazione di effetti grafici fluidi.
+An interactive Solar System simulator developed in C++ using the SFML library. The project features dynamic planetary orbit visualization with an advanced camera system.
 
-## Funzionalità Attuali
-- **Rendering in Fullscreen:** Adattamento automatico alla risoluzione nativa del monitor.
-- **Sistema di Scie (Orbital Trails):** Ogni pianeta lascia una scia sfumata che ne traccia il percorso, con gestione intelligente della trasparenza.
-- **Controllo del Tempo:** Possibilità di accelerare o rallentare la simulazione in tempo reale.
-- **Pausa Intelligente:** Funzione di pausa (barra spaziatrice) che "congela" la fisica e le scie senza bug visivi al riavvio.
-- **Sfondo Stellare Dinamico:** Generazione procedurale di stelle basata sulla risoluzione dello schermo.
+## 🚀 Key Features
+- **Dynamic Camera:** Click on a planet to follow it and automatically zoom in.
+- **Interactive HUD:** A toggleable help panel ("?" button) that displays commands without obstructing the view.
+- **Dual-View System:** The UI remains fixed while the deep space can be explored and zoomed freely.
+- **Time Management:** Pause or adjust the simulation speed in real-time.
+- **Astronomical Details:** Includes major planets with relative sizes and orbital speeds, plus the Moon with conditional visibility.
+- **Visual Trails:** Smooth planetary trails to visualize orbital paths.
 
-## Tecniche Utilizzate
-- **OOP (Programmazione a Oggetti):** Architettura pulita con classi dedicate per i corpi celesti.
-- **Vettori e Matematica:** Calcolo delle orbite tramite funzioni trigonometriche e gestione dei riferimenti relativi (es. Lune che orbitano attorno ai pianeti).
-- **Vertex Arrays:** Utilizzo di `sf::VertexArray` per gestire le scie in modo efficiente dal punto di vista delle prestazioni.
+## 🎮 Controls
+- **Left Click:** Select a planet to follow / Toggle the "?" help button.
+- **Space:** Pause/Resume the simulation.
+- **Right Arrow:** Increase time speed.
+- **Left Arrow:** Decrease time speed.
+- **Backspace:** Reset the camera (return to system overview).
+- **Esc:** Exit the application.
 
-## Obiettivi Futuri (In fase di sviluppo)
-- **Interattività Mouse:** Visualizzazione di informazioni dettagliate al passaggio del cursore (Hover) sui pianeti.
-- **Focus Camera:** Funzione di zoom e inseguimento automatico dei corpi celesti.
-- **Sistema di satelliti:** Implementazione di lune e orbite secondarie per tutti i giganti gassosi.
+## 🛠 Tech Stack
+- **Language:** C++
+- **Graphics Library:** SFML 3.0
+- **Font:** Comic Sans MS (for that friendly look!)
 
-## Requisiti
-- Compilatore C++ (standard 17 o superiore)
-- SFML 3.0.0 (o versioni compatibili)
+## 🔧 Installation
+1. Ensure you have **SFML 3.0** installed and configured in your environment.
+2. Compile the `main.cpp` and `Planet.cpp` files.
+3. Make sure `comic.ttf` is in the same directory as the executable.
+4. Run the application and enjoy the space exploration!
