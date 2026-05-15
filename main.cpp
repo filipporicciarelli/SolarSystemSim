@@ -16,10 +16,10 @@ int main() {
     window.setFramerateLimit(144);
     
     sf::Clock clock;
-    sf::Vector2f screenCenter(
-        static_cast<float>(desktop.size.x) / 2.f,
-        static_cast<float>(desktop.size.y) / 2.f
-    );
+
+    float screenW = static_cast<float>(desktop.size.x);
+    float screenH = static_cast<float>(desktop.size.y);
+    sf::Vector2f screenCenter(screenW / 2.f, screenH / 2.f);
 
     // [ZOOM] Inizializzazione della Visuale (Telecamera)
     sf::View view(window.getDefaultView());
@@ -41,6 +41,31 @@ int main() {
     // VARIABILI DI STATO E CONTROLLO
     float timeScale = 1.0f; // 1.0 è velocità normale
     bool isPaused = false;
+    bool showHUD = false;
+
+    // Setup HUD
+    sf::RectangleShape hudPanel({ 300.f, 200.f });
+    hudPanel.setFillColor(sf::Color(0, 0, 0, 180));
+    hudPanel.setOutlineThickness(2.f);
+    hudPanel.setOutlineColor(sf::Color::White);
+
+    sf::CircleShape helpButton(20.f);
+    helpButton.setFillColor(sf::Color(50, 50, 50, 200));
+    helpButton.setOutlineThickness(2.f);
+    helpButton.setOutlineColor(sf::Color::White);
+
+    sf::Text helpButtonText(font, "?");
+    helpButtonText.setCharacterSize(25);
+
+    sf::Text commandsText(font, "COMANDI:\n- Spazio: Pausa\n- Frecce <- ->: Velocita'\n- Click: Zoom Pianeta\n- Backspace: Reset");
+    commandsText.setCharacterSize(18);
+
+    // Posizionamento HUD (angolo alto a destra)
+    float margin = 20.f;
+    helpButton.setPosition({ screenW - 50.f - margin, margin });
+    helpButtonText.setPosition({ screenW - 35.f - margin, margin + 2.f });
+    hudPanel.setPosition({ screenW - 300.f - margin, margin + 60.f });
+    commandsText.setPosition({ screenW - 290.f - margin, margin + 70.f });
 
     std::vector<Planet> planets;
 
@@ -115,52 +140,51 @@ int main() {
             // GESTIONE CLICK MOUSE (Selezione)
             if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
                 if (mouseEvent->button == sf::Mouse::Button::Left) {
-                    sf::Vector2f worldPos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
-                    bool clickedAnything = false;
+                    sf::Vector2f mousePosHUD = window.mapPixelToCoords(sf::Mouse::getPosition(window), window.getDefaultView());
 
-                    for (auto& p : planets) {
-                        sf::Vector2f diff = worldPos - p.getPosition();
-                        if (std::sqrt(diff.x * diff.x + diff.y * diff.y) < p.getRadius() + 10.f) {
-                            followedPlanet = &p;   // La telecamera ora segue questo pianeta
-                            targetZoom = 0.2f;     // Zoomiamo (più basso è il valore, più siamo vicini)
-                            clickedAnything = true;
-
-                            if (p.getName() == "Terra") moons[0].setVisible(true);
-                            break;
-                        }
+                    sf::Vector2f btnDiff = mousePosHUD - (helpButton.getPosition() + sf::Vector2f(20.f, 20.f));
+                    if (std::sqrt(btnDiff.x * btnDiff.x + btnDiff.y * btnDiff.y) < 20.f) {
+                        showHUD = !showHUD; // Inverte la visibilità del pannello
                     }
-
-                    if (!clickedAnything) { // Click nel vuoto: resetta
-                        followedPlanet = nullptr;
-                        targetZoom = 1.0f;
-                        view = window.getDefaultView(); // Torna alla visuale originale
+                    else {
+                        // [HUD - NUOVO] Se non abbiamo cliccato il "?" procediamo con la logica spaziale (zoomata)
+                        sf::Vector2f worldPos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
+                        bool clickedAnything = false;
+                        for (auto& p : planets) {
+                            sf::Vector2f diff = worldPos - p.getPosition();
+                            if (std::sqrt(diff.x * diff.x + diff.y * diff.y) < p.getRadius() + 15.f) {
+                                followedPlanet = &p; targetZoom = 0.15f; clickedAnything = true;
+                                if (p.getName() == "Terra") moons[0].setVisible(true);
+                                break;
+                            }
+                        }
+                        if (!clickedAnything) { followedPlanet = nullptr; targetZoom = 1.0f; moons[0].setVisible(false); }
                     }
                 }
             }
         }
 
         // LOGICA DEL TEMPO (Riavvio sempre l'orologio per evitare scatti dopo la pausa)
-        float realDt = clock.restart().asSeconds();
-        float dt = isPaused ? 0.f : realDt * timeScale;
-
+        float dt;
+        if (isPaused) {
+            // Mentre è in pausa, svuotiamo l'orologio continuamente
+            clock.restart();
+            dt = 0.f;
+        }
+        else {
+            // Quando non è in pausa, calcoliamo il tempo normalmente
+            dt = clock.restart().asSeconds() * timeScale;
+        }
+        
         // UPDATE POSIZIONI
         for (auto& p : planets) p.update(dt, screenCenter);
         for (auto& p : moons) p.update(dt, screenCenter);
 
-        if (followedPlanet) {
-            // Segue il pianeta
-            view.setCenter(followedPlanet->getPosition());
-            // Zoom fluido: si avvicina a targetZoom (0.2f) gradualmente
-            currentZoom += (targetZoom - currentZoom) * 0.05f;
-        }
-        else {
-            // Inquadratura totale
-            view.setCenter(screenCenter);
-            currentZoom += (targetZoom - currentZoom) * 0.05f;
-        }
-
-        view.setSize({ static_cast<float>(desktop.size.x) * currentZoom,
-                    static_cast<float>(desktop.size.y) * currentZoom });
+        // LOGICA ZOOM
+        if (followedPlanet) view.setCenter(followedPlanet->getPosition());
+        else view.setCenter(screenCenter);
+        currentZoom += (targetZoom - currentZoom) * 0.05f;
+        view.setSize({ screenW * currentZoom, screenH * currentZoom });
 
         // DISEGNO
         window.clear(sf::Color(5, 5, 15));
@@ -179,12 +203,18 @@ int main() {
         
         if (followedPlanet) {
             planetNameText.setString(followedPlanet->getName());
-
-            float posX = followedPlanet->getPosition().x - 20.f;
-            float posY = followedPlanet->getPosition().y - followedPlanet->getRadius() - 40.f;
-
-            planetNameText.setPosition({ posX, posY });
+            planetNameText.setPosition({ followedPlanet->getPosition().x - 20.f, followedPlanet->getPosition().y - followedPlanet->getRadius() - 40.f });
             window.draw(planetNameText);
+        }
+
+        // Questo impedisce al pulsante "?" di venire zoomato o spostato
+        window.setView(window.getDefaultView());
+        window.draw(helpButton);
+        window.draw(helpButtonText);
+
+        if (showHUD) {
+            window.draw(hudPanel);
+            window.draw(commandsText);
         }
 
         window.display();
