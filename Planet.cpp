@@ -2,7 +2,7 @@
 #include <cmath>
 
 Planet::Planet(std::string n, float radius, float distance, float speed, sf::Color color, Planet* parent, bool hasTrail)
-    : name (n), orbitDistance(distance), rotationSpeed(speed), currentAngle(0.f), parentPlanet(parent), showTrail(hasTrail)
+    : name(n), orbitDistance(distance), rotationSpeed(speed), currentAngle(0.f), parentPlanet(parent), showTrail(hasTrail)
 {
     shape.setRadius(radius);
     shape.setOrigin({ radius, radius });
@@ -14,10 +14,10 @@ Planet::Planet(std::string n, float radius, float distance, float speed, sf::Col
 }
 
 void Planet::update(float deltaTime, sf::Vector2f centerOffset) {
-    // Se è in pausa o il tempo è fermo, non aggiorna nulla (risolve bug sparizione scia)
+    // Return early if simulation is paused or time is stopped (fixes trail disappearance bug)
     if (deltaTime <= 0.f) return;
 
-    // AGGIORNAMENTO POSIZIONE
+    // POSITION UPDATE
     currentAngle += rotationSpeed * deltaTime;
 
     float x = std::cos(currentAngle) * orbitDistance;
@@ -34,21 +34,21 @@ void Planet::update(float deltaTime, sf::Vector2f centerOffset) {
 
     shape.setPosition(newPos);
 
-    // LOGICA DELLA SCIA (Solo se in movimento)
+    // PLANETARY TRAIL LOGIC (Only processed when moving)
     if (showTrail) {
-        // Aggiungo il nuovo punto
+        // Append the new position vertex
         trail.append(sf::Vertex(shape.getPosition(), shape.getFillColor()));
 
-        // Gestione lunghezza massima (es. 300 punti)
+        // Cap maximum trail length (e.g., 300 points)
         if (trail.getVertexCount() > 300) {
-            // Rimuovo il punto più vecchio spostando gli altri (Shift)
+            // Shift vertices left to remove the oldest point
             for (size_t i = 0; i < trail.getVertexCount() - 1; i++) {
                 trail[i] = trail[i + 1];
             }
             trail.resize(trail.getVertexCount() - 1);
         }
 
-        // Ricalcolo della sfumatura Alpha
+        // Recalculate alpha gradient for fading effect
         size_t count = trail.getVertexCount();
         for (size_t i = 0; i < count; ++i) {
             float progress = static_cast<float>(i) / static_cast<float>(count);
@@ -60,20 +60,20 @@ void Planet::update(float deltaTime, sf::Vector2f centerOffset) {
 }
 
 void Planet::draw(sf::RenderWindow& window) {
-    //controlla se il pianeta è visibile o no
+    // Check visibility state
     if (!isVisible) return;
 
-    // Disegna la scia (se esiste)
+    // Draw orbital trail if enabled and populated
     if (showTrail && trail.getVertexCount() > 0) {
         window.draw(trail);
     }
 
-    // Disegna il pianeta
+    // Draw planetary body
     window.draw(shape);
 
-    // Effetto speciale: Anelli di Saturno
-    // Uso una condizione specifica per "identificare" Saturno basandoci sulle sue proprietà
-    if (name=="Saturno") {
+    // Visual effect: Saturn's Rings
+    // Target Saturn specifically by checking its string identifier
+    if (name == "Saturno") {
         sf::CircleShape ring(shape.getRadius() * 1.8f);
         ring.setOrigin({ ring.getRadius(), ring.getRadius() });
         ring.setPosition(shape.getPosition());

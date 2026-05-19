@@ -2,7 +2,7 @@
 #include "Planet.h"
 #include <optional>
 #include <vector>
-#include <cstdint> //per usare uint8_t
+#include <cstdint> // Required for uint8_t
 
 struct Star {
     sf::Vector2f pos;
@@ -10,27 +10,27 @@ struct Star {
 };
 
 int main() {
-    // CONFIGURAZIONE FINESTRA
-    sf::VideoMode desktop = sf::VideoMode::getDesktopMode(); // Ottengo la risoluzione del monitor attuale    
-    sf::RenderWindow window(desktop, "Solar System Sim", sf::State::Fullscreen); //creo la finestra in Fullscreen
+    // WINDOW CONFIGURATION
+    sf::VideoMode desktop = sf::VideoMode::getDesktopMode(); // Get the current monitor resolution    
+    sf::RenderWindow window(desktop, "Solar System Sim", sf::State::Fullscreen); // Create the window in Fullscreen mode
     window.setFramerateLimit(144);
-    
+
     sf::Clock clock;
 
     float screenW = static_cast<float>(desktop.size.x);
     float screenH = static_cast<float>(desktop.size.y);
     sf::Vector2f screenCenter(screenW / 2.f, screenH / 2.f);
 
-    // [ZOOM] Inizializzazione della Visuale (Telecamera)
+    // [ZOOM] Camera/View Initialization
     sf::View view(window.getDefaultView());
     Planet* followedPlanet = nullptr;
     float targetZoom = 1.0f;
     float currentZoom = 1.0f;
 
-    // [FONT] Caricamento Font e Testo
+    // [FONT] Font and Text Loading
     sf::Font font;
     if (!font.openFromFile("comic.ttf")) {
-        // Se non lo trova, il programma continuerà senza scritte
+        // If font loading fails, the program will continue without rendering text
     }
     sf::Text planetNameText(font, "");
     planetNameText.setCharacterSize(25);
@@ -38,12 +38,12 @@ int main() {
     planetNameText.setOutlineColor(sf::Color::Black);
     planetNameText.setOutlineThickness(2.f);
 
-    // VARIABILI DI STATO E CONTROLLO
-    float timeScale = 1.0f; // 1.0 è velocità normale
+    // STATE AND CONTROL VARIABLES
+    float timeScale = 1.0f; // 1.0 represents standard speed
     bool isPaused = false;
     bool showHUD = false;
 
-    // Setup HUD
+    // HUD Setup
     sf::RectangleShape hudPanel({ 300.f, 200.f });
     hudPanel.setFillColor(sf::Color(0, 0, 0, 180));
     hudPanel.setOutlineThickness(2.f);
@@ -60,7 +60,7 @@ int main() {
     sf::Text commandsText(font, "COMANDI:\n- Spazio: Pausa\n- Frecce <- ->: Velocita'\n- Click: Zoom Pianeta\n- Backspace: Reset");
     commandsText.setCharacterSize(18);
 
-    // Posizionamento HUD (angolo alto a destra)
+    // HUD Positioning (Top-right corner)
     float margin = 20.f;
     helpButton.setPosition({ screenW - 50.f - margin, margin });
     helpButtonText.setPosition({ screenW - 35.f - margin, margin + 2.f });
@@ -69,16 +69,16 @@ int main() {
 
     std::vector<Planet> planets;
 
-    // INIZIALIZZAZIONE PIANETI
+    // PLANETS INITIALIZATION
     planets.emplace_back("Sole", 40.f, 0.f, 0.f, sf::Color::Yellow, nullptr, false);
 
-    // pianeti interni
+    // Inner planets
     planets.emplace_back("Mercurio", 6.f, 100.f, 1.6f, sf::Color(169, 169, 169));
     planets.emplace_back("Venere", 12.f, 160.f, 1.2f, sf::Color(255, 223, 196));
     planets.emplace_back("Terra", 13.f, 230.f, 1.0f, sf::Color::Blue);
     planets.emplace_back("Marte", 10.f, 310.f, 0.8f, sf::Color::Red);
 
-    // pianeti esterni
+    // Outer planets
     planets.emplace_back("Giove", 30.f, 450.f, 0.5f, sf::Color(210, 180, 140));
     planets.emplace_back("Saturno", 25.f, 600.f, 0.4f, sf::Color(238, 232, 170));
     planets.emplace_back("Urano", 18.f, 750.f, 0.3f, sf::Color(173, 216, 230));
@@ -91,11 +91,11 @@ int main() {
 
     std::vector<Planet> moons;
 
-    // lune
+    // Moons
     moons.emplace_back("Luna", 5.f, 60.f, 2.5f, sf::Color(150, 150, 150), earthPtr, false);
     moons[0].setVisible(false);
 
-    // GENERAZIONE STELLE
+    // STARFIELD GENERATION
     std::vector<Star> stars;
     for (int i = 0; i < 1000; ++i) {
         stars.push_back({
@@ -110,44 +110,44 @@ int main() {
     // --- GAME LOOP ---
     while (window.isOpen()) {
 
-        // GESTIONE EVENTI (Input Tastiera/Mouse)
+        // EVENT HANDLING (Keyboard/Mouse Input)
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
 
             if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-                // Esci
+                // Exit
                 if (keyPressed->code == sf::Keyboard::Key::Escape) {
                     window.close();
                 }
-                // Pausa
+                // Pause Toggle
                 if (keyPressed->code == sf::Keyboard::Key::Space) {
                     isPaused = !isPaused;
                 }
-                // Velocità tempo (Frecce destra/sinistra)
+                // Time scale control (Right/Left Arrow Keys)
                 if (keyPressed->code == sf::Keyboard::Key::Right) timeScale += 0.2f;
                 if (keyPressed->code == sf::Keyboard::Key::Left)  timeScale -= 0.2f;
                 if (timeScale < 0.f) timeScale = 0.f;
 
-                // [ZOOM] Reset con tasto Backspace
+                // [ZOOM] Reset view via Backspace key
                 if (keyPressed->code == sf::Keyboard::Key::Backspace) {
                     followedPlanet = nullptr;
                     targetZoom = 1.0f;
                 }
             }
 
-            // GESTIONE CLICK MOUSE (Selezione)
+            // MOUSE CLICK HANDLING (Selection & Target Tracking)
             if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
                 if (mouseEvent->button == sf::Mouse::Button::Left) {
                     sf::Vector2f mousePosHUD = window.mapPixelToCoords(sf::Mouse::getPosition(window), window.getDefaultView());
 
                     sf::Vector2f btnDiff = mousePosHUD - (helpButton.getPosition() + sf::Vector2f(20.f, 20.f));
                     if (std::sqrt(btnDiff.x * btnDiff.x + btnDiff.y * btnDiff.y) < 20.f) {
-                        showHUD = !showHUD; // Inverte la visibilità del pannello
+                        showHUD = !showHUD; // Toggle HUD panel visibility
                     }
                     else {
-                        // [HUD - NUOVO] Se non abbiamo cliccato il "?" procediamo con la logica spaziale (zoomata)
+                        // [HUD - NEW] If the "?" button wasn't clicked, process world-space click logic (planetary zoom)
                         sf::Vector2f worldPos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
                         bool clickedAnything = false;
                         for (auto& p : planets) {
@@ -164,50 +164,50 @@ int main() {
             }
         }
 
-        // LOGICA DEL TEMPO (Riavvio sempre l'orologio per evitare scatti dopo la pausa)
+        // TIME STEP LOGICA (Always restart clock to prevent lag spikes after unpausing)
         float dt;
         if (isPaused) {
-            // Mentre è in pausa, svuotiamo l'orologio continuamente
+            // Continuously flush the clock while paused
             clock.restart();
             dt = 0.f;
         }
         else {
-            // Quando non è in pausa, calcoliamo il tempo normalmente
+            // Calculate delta time normally when unpaused
             dt = clock.restart().asSeconds() * timeScale;
         }
-        
-        // UPDATE POSIZIONI
+
+        // POSITION UPDATES
         for (auto& p : planets) p.update(dt, screenCenter);
         for (auto& p : moons) p.update(dt, screenCenter);
 
-        // LOGICA ZOOM
+        // CAMERA ZOOM LOGIC
         if (followedPlanet) view.setCenter(followedPlanet->getPosition());
         else view.setCenter(screenCenter);
         currentZoom += (targetZoom - currentZoom) * 0.05f;
         view.setSize({ screenW * currentZoom, screenH * currentZoom });
 
-        // DISEGNO
+        // RENDERING
         window.clear(sf::Color(5, 5, 15));
 
         window.setView(view);
 
-        // Sfondo: Stelle
+        // Background: Starfield
         for (const auto& star : stars) {
             sf::Vertex point(star.pos, sf::Color(255, 255, 255, star.brightness));
             window.draw(&point, 1, sf::PrimitiveType::Points);
         }
 
-        // Entità spaziali
+        // Space entities
         for (auto& p : planets) p.draw(window);
         for (auto& p : moons) p.draw(window);
-        
+
         if (followedPlanet) {
             planetNameText.setString(followedPlanet->getName());
             planetNameText.setPosition({ followedPlanet->getPosition().x - 20.f, followedPlanet->getPosition().y - followedPlanet->getRadius() - 40.f });
             window.draw(planetNameText);
         }
 
-        // Questo impedisce al pulsante "?" di venire zoomato o spostato
+        // Render HUD elements using the default static view to prevent scaling/shifting
         window.setView(window.getDefaultView());
         window.draw(helpButton);
         window.draw(helpButtonText);
