@@ -1,8 +1,8 @@
 #include "Planet.h"
 #include <cmath>
 
-Planet::Planet(std::string n, float radius, float distance, float speed, sf::Color color, Planet* parent, bool hasTrail)
-    : name(n), orbitDistance(distance), rotationSpeed(speed), currentAngle(0.f), parentPlanet(parent), showTrail(hasTrail)
+Planet::Planet(std::string n, float radius, float distance, float speed, sf::Color color, Planet* parent, bool hasTrail, PlanetInfo planetInfo)
+    : name(n), orbitDistance(distance), rotationSpeed(speed), currentAngle(0.f), parentPlanet(parent), showTrail(hasTrail), info(planetInfo)
 {
     shape.setRadius(radius);
     shape.setOrigin({ radius, radius });
@@ -17,8 +17,10 @@ void Planet::update(float deltaTime, sf::Vector2f centerOffset) {
     // Return early if simulation is paused or time is stopped (fixes trail disappearance bug)
     if (deltaTime <= 0.f) return;
 
+    float finalRotationSpeed = rotationSpeed;
+
     // POSITION UPDATE
-    currentAngle += rotationSpeed * deltaTime;
+    currentAngle += finalRotationSpeed * deltaTime;
 
     float x = std::cos(currentAngle) * orbitDistance;
     float y = std::sin(currentAngle) * orbitDistance;

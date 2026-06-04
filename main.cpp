@@ -67,22 +67,43 @@ int main() {
     hudPanel.setPosition({ screenW - 300.f - margin, margin + 60.f });
     commandsText.setPosition({ screenW - 290.f - margin, margin + 70.f });
 
+    sf::Text infoTitleText(font, "");
+    infoTitleText.setCharacterSize(28);
+    infoTitleText.setFillColor(sf::Color::Yellow);
+    infoTitleText.setOutlineColor(sf::Color::Black);
+    infoTitleText.setOutlineThickness(2.f);
+
+    sf::Text infoBodyText(font, "");
+    infoBodyText.setCharacterSize(16);
+    infoBodyText.setFillColor(sf::Color::White);
+
+    // Planets info
+    PlanetInfo soleData{ "---", "---", "---", "~15.000.000 C", "La stella centrale del nostro\nsistema solare, composta\nprincipalmente da idrogeno\ned elio." };
+    PlanetInfo mercData{ "57.9 mln km", "88 giorni", "47.4 km/s", "-173 a 427 C", "Il pianeta piu' vicino al Sole\ne il piu' piccolo del sistema\nsolare." };
+    PlanetInfo veneData{ "108.2 mln km", "225 giorni", "35.0 km/s", "~462 C", "Il pianeta piu' caldo a causa\ndi un denso effetto serra\natmosferico." };
+    PlanetInfo terrData{ "149.6 mln km", "365 giorni", "29.8 km/s", "-88 a 58 C", "Il nostro pianeta, l'unico\nnoto per ospitare forme\ndi vita." };
+    PlanetInfo martData{ "227.9 mln km", "687 giorni", "24.1 km/s", "-143 a 35 C", "Chiamato il Pianeta Rosso per\nvia del ferro ossidato sulla\nsua superficie." };
+    PlanetInfo giovData{ "778.5 mln km", "12 anni", "13.1 km/s", "~-108 C", "Il gigante gassoso piu' grande,\nfamoso per la sua Grande\nMacchia Rossa." };
+    PlanetInfo satuData{ "1.43 mld km", "29 anni", "9.7 km/s", "~-139 C", "Famoso per il suo esteso e\nspettacolare sistema di\nanelli planetari." };
+    PlanetInfo uranData{ "2.87 mld km", "84 anni", "6.8 km/s", "~-197 C", "Un gigante di ghiaccio con un\nasse di rotazione\nincredibilmente inclinato." };
+    PlanetInfo nettData{ "4.50 mld km", "165 anni", "5.4 km/s", "~-201 C", "Il pianeta piu' lontano dal\nSole, sferzato dai venti piu'\nforti del sistema." };
+
     std::vector<Planet> planets;
 
     // PLANETS INITIALIZATION
-    planets.emplace_back("Sole", 40.f, 0.f, 0.f, sf::Color::Yellow, nullptr, false);
+    planets.emplace_back("Sole", 40.f, 0.f, 0.f, sf::Color::Yellow, nullptr, false, soleData);
 
     // Inner planets
-    planets.emplace_back("Mercurio", 6.f, 100.f, 1.6f, sf::Color(169, 169, 169));
-    planets.emplace_back("Venere", 12.f, 160.f, 1.2f, sf::Color(255, 223, 196));
-    planets.emplace_back("Terra", 13.f, 230.f, 1.0f, sf::Color::Blue);
-    planets.emplace_back("Marte", 10.f, 310.f, 0.8f, sf::Color::Red);
+    planets.emplace_back("Mercurio", 6.f, 100.f, 1.6f, sf::Color(169, 169, 169), nullptr, true, mercData);
+    planets.emplace_back("Venere", 12.f, 160.f, 1.2f, sf::Color(255, 223, 196), nullptr, true, veneData);
+    planets.emplace_back("Terra", 13.f, 230.f, 1.0f, sf::Color::Blue, nullptr, true, terrData);
+    planets.emplace_back("Marte", 10.f, 310.f, 0.8f, sf::Color::Red, nullptr, true, martData);
 
     // Outer planets
-    planets.emplace_back("Giove", 30.f, 450.f, 0.5f, sf::Color(210, 180, 140));
-    planets.emplace_back("Saturno", 25.f, 600.f, 0.4f, sf::Color(238, 232, 170));
-    planets.emplace_back("Urano", 18.f, 750.f, 0.3f, sf::Color(173, 216, 230));
-    planets.emplace_back("Nettuno", 18.f, 900.f, 0.25f, sf::Color(65, 105, 225));
+    planets.emplace_back("Giove", 30.f, 450.f, 0.5f, sf::Color(210, 180, 140), nullptr, true, giovData);
+    planets.emplace_back("Saturno", 25.f, 600.f, 0.4f, sf::Color(238, 232, 170), nullptr, true, satuData);
+    planets.emplace_back("Urano", 18.f, 750.f, 0.3f, sf::Color(173, 216, 230), nullptr, true, uranData);
+    planets.emplace_back("Nettuno", 18.f, 900.f, 0.25f, sf::Color(65, 105, 225), nullptr, true, nettData);
 
     Planet* earthPtr = nullptr;
     for (auto& p : planets) {
@@ -177,7 +198,14 @@ int main() {
         }
 
         // POSITION UPDATES
-        for (auto& p : planets) p.update(dt, screenCenter);
+        for (auto& p : planets) {
+            if (followedPlanet != nullptr) {
+                p.update(0.f, screenCenter);
+            }
+            else {
+                p.update(dt, screenCenter);
+            }
+        }
         for (auto& p : moons) p.update(dt, screenCenter);
 
         // CAMERA ZOOM LOGIC
@@ -201,12 +229,6 @@ int main() {
         for (auto& p : planets) p.draw(window);
         for (auto& p : moons) p.draw(window);
 
-        if (followedPlanet) {
-            planetNameText.setString(followedPlanet->getName());
-            planetNameText.setPosition({ followedPlanet->getPosition().x - 20.f, followedPlanet->getPosition().y - followedPlanet->getRadius() - 40.f });
-            window.draw(planetNameText);
-        }
-
         // Render HUD elements using the default static view to prevent scaling/shifting
         window.setView(window.getDefaultView());
         window.draw(helpButton);
@@ -215,6 +237,50 @@ int main() {
         if (showHUD) {
             window.draw(hudPanel);
             window.draw(commandsText);
+        }
+
+        if (followedPlanet != nullptr) {
+
+            float panelW = 360.f;
+            float panelH = screenH - 80.f;
+            float panelX = screenW - panelW - 20.f; // Ancorato a destra con margine
+            float panelY = 40.f;
+
+            // 1. Sfondo del pannello (Nero semitrasparente come il tuo HUD)
+            sf::RectangleShape infoPanel({ panelW, panelH });
+            infoPanel.setFillColor(sf::Color(0, 0, 0, 195));
+            infoPanel.setOutlineThickness(2.f);
+            infoPanel.setOutlineColor(sf::Color(100, 149, 237)); // Un bel blu elettrico/spaziale per i bordi
+            infoPanel.setPosition({ panelX, panelY });
+            window.draw(infoPanel);
+
+            // 2. Prepariamo e disegniamo il Nome del Pianeta
+            infoTitleText.setString(followedPlanet->getName());
+            infoTitleText.setPosition({ panelX + 20.f, panelY + 20.f });
+            window.draw(infoTitleText);
+
+            // 3. Recuperiamo la struttura dati del pianeta cliccato
+            const PlanetInfo& pInfo = followedPlanet->getInfo();
+
+            // 4. Formattiamo la stringa con tutti i dati incolonnati
+            std::string dataString =
+                "DISTANZA: " + pInfo.distance + "\n\n" +
+                "PERIODO ORBITALE: " + pInfo.period + "\n\n" +
+                "VELOCITA' ORBITALE: " + pInfo.speed + "\n\n" +
+                "TEMPERATURA: " + pInfo.temperature + "\n\n" +
+                "-----------------------------------\n\n" +
+                "DESCRIZIONE:\n" + pInfo.description;
+
+            // Se la descrizione è lunga, SFML non va a capo da solo. 
+            // Per ora le nostre stringhe sono corte, ma in futuro potremmo gestirlo.
+
+            // 5. Disegnamo i dati scientifici dentro il pannello
+            infoBodyText.setString(dataString);
+            infoBodyText.setPosition({ panelX + 20.f, panelY + 80.f });
+
+            // Applichiamo un piccolo trucco: se il testo esce dal pannello in larghezza, 
+            // puoi gestirlo cambiando la dimensione del carattere, ma a 16px ci sta perfettamente.
+            window.draw(infoBodyText);
         }
 
         window.display();

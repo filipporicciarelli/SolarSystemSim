@@ -3,6 +3,14 @@
 #include <vector>
 #include <string>
 
+struct PlanetInfo {
+    std::string distance;
+    std::string period;
+    std::string speed;
+    std::string temperature;
+    std::string description;
+};
+
 class Planet {
 private:
     sf::CircleShape shape;
@@ -14,10 +22,12 @@ private:
     bool showTrail;
     bool isVisible = true;
     std::string name;
+    PlanetInfo info;
 
 public:
     // Constructor: Note default arguments for parent and hasTrail properties
-    Planet(std::string name, float radius, float distance, float speed, sf::Color color, Planet* parent = nullptr, bool hasTrail = true);
+    Planet(std::string name, float radius, float distance, float speed, sf::Color color, Planet* parent = nullptr,
+            bool hasTrail = true, PlanetInfo PlanetInfo = {});
 
     // Main lifecycle methods
     void update(float deltaTime, sf::Vector2f centerOffset);
@@ -32,4 +42,5 @@ public:
     float getRadius() const;
     std::string getName() const { return name; }
     bool getIsVisible() const { return isVisible; }
+    const PlanetInfo& getInfo() const { return info; }
 };
