@@ -26,6 +26,7 @@ int main() {
     Planet* followedPlanet = nullptr;
     float targetZoom = 1.0f;
     float currentZoom = 1.0f;
+    sf::Vector2f currentCameraPos = screenCenter;
 
     // [FONT] Font and Text Loading
     sf::Font font;
@@ -209,8 +210,13 @@ int main() {
         for (auto& p : moons) p.update(dt, screenCenter);
 
         // CAMERA ZOOM LOGIC
-        if (followedPlanet) view.setCenter(followedPlanet->getPosition());
-        else view.setCenter(screenCenter);
+        sf::Vector2f targetCameraPos = screenCenter;
+        if (followedPlanet != nullptr) {
+            targetCameraPos = followedPlanet->getPosition();
+        }
+        
+        currentCameraPos += (targetCameraPos - currentCameraPos) * 0.05f;
+        view.setCenter(currentCameraPos);
         currentZoom += (targetZoom - currentZoom) * 0.05f;
         view.setSize({ screenW * currentZoom, screenH * currentZoom });
 
